@@ -22,6 +22,30 @@ def getSMATest(df: pd.DataFrame):
 
     print(df)
 
+    # Set figure size
+    plt.figure(figsize=(12, 9))
+
+    # Plot the resistance and support level
+    plt.plot(df["Adj Close"], label="Adj Close")
+    plt.plot(df["SMA with period 5"], label="SMA with period 5")
+    plt.plot(df["SMA with period 150"], label="SMA with period 150")
+
+    # Plot buy and sell signal
+    plt.legend()
+    plt.show()
+
+    #! Test 
+    plt.figure(figsize=(12, 9))
+
+    # Plot the resistance and support level
+    plt.plot(df["Adj Close"] / df["Adj Close"], label="Adj Close")
+    plt.plot(df["SMA with period 5"] / df["Adj Close"], label="SMA with period 5")
+    plt.plot(df["SMA with period 150"] / df["Adj Close"], label="SMA with period 150")
+
+    # Plot buy and sell signal
+    plt.legend()
+    plt.show()
+
 
 def getResistance(df: pd.DataFrame, order: int = 5):
     # Found local maximum
@@ -110,6 +134,20 @@ def getRSTest(df: pd.DataFrame):
     # Plot buy and sell signal
     plt.legend()
     plt.show()
+
+    #! Test
+    # Try normalize the resistance and support by the adj close price
+    # Set figure size
+    # plt.figure(figsize=(12, 9))
+
+    # # Plot the resistance and support level
+    # plt.plot(df["Adj Close"] / df["Adj Close"], label="Adj Close")
+    # plt.plot(df["Resistance"] / df["Adj Close"], label="Resistance")
+    # plt.plot(df["Support"] / df["Adj Close"], label="Support")
+
+    # # Plot buy and sell signal
+    # plt.legend()
+    # plt.show()
 
 
 def getRSI(df: pd.DataFrame, period: int = 14):
