@@ -36,9 +36,9 @@ def RunTest():
 
     # Q-Learning Method
     Q = QLearningAgent(testEnv)
-    Q.Train(tol=5e-5)
-    Q.Compile(os.path.join(TESTDIR, "q-learning-compiled1.csv"))
-    Q.RunTest(os.path.join(TESTDIR, "q-learning1"))
+    Q.Train(tol=1e-5)
+    Q.Compile(os.path.join(TESTDIR, "q-learning-compiled.csv"))
+    Q.RunTest(os.path.join(TESTDIR, "q-learning"))
 
     # Other simple agent
     a = MAAgent(testEnv)
@@ -49,6 +49,23 @@ def RunTest():
 
     c = RSIAgent(testEnv)
     c.RunTest(os.path.join(TESTDIR, "RSIAgent"))
+
+
+def RunSummary():
+    testEnv = Environment(os.path.join("formatted_data", "q-learning"))
+    DailyReturnData = []
+    TotalSymbol = len(testEnv.symbols)
+
+    for count, symbol in enumerate(testEnv.symbols):
+        if count % 100:
+            print(f"Loading Progress {count}/{TotalSymbol}..")
+
+        df = testEnv.GetTest(symbol)
+        df["Log Adj Close"] = np.log(df["Adj Close"])
+        DailyReturnData.append(df["Log Adj Close"].shift(-1) - df["Log Adj Close"])
+    
+    All_df = pd.concat(DailyReturnData)
+    print(All_df.describe())
 
 
 def ReRunTest():
@@ -56,15 +73,16 @@ def ReRunTest():
 
     # Q-Learning Method
     Q = QLearningAgent(testEnv)
-    Q.Load(os.path.join(TESTDIR, "q-learning-compiled1.csv"))
-    Q.RunTest(os.path.join(TESTDIR, "q-learning1"))
+    Q.Load(os.path.join(TESTDIR, "q-learning-compiled.csv"))
+    Q.RunTest(os.path.join(TESTDIR, "q-learning"))
 
-    # Other simple agent
+    # # Other simple agent
     a = MAAgent(testEnv)
     a.RunTest(os.path.join(TESTDIR, "MAAgent"))
 
     b = RSAgent(testEnv)
     b.RunTest(os.path.join(TESTDIR, "RSAgent"))
+    b.RunTest(os.path.join("tests", "q-learning", "RSAgent"))
 
     c = RSIAgent(testEnv)
     c.RunTest(os.path.join(TESTDIR, "RSIAgent"))
@@ -72,8 +90,8 @@ def ReRunTest():
 
 def VisualizeSignal(dataDir: str, mode: PlotMode | None = None):
     # Pick a random data
-    # sampleFile = random.choice(os.listdir(dataDir))
-    sampleFile = "AAPL.csv"
+    sampleFile = random.choice(os.listdir(dataDir))
+    # sampleFile = "AAPL.csv"
 
     if mode == None:
         df = pd.read_csv(os.path.join(dataDir, sampleFile))
@@ -222,12 +240,14 @@ def BrockTest(dataPath: str):
         alternative="greater",
     )
 
+    print(f"Number of unconditional data: {len(UnconditionalReturn)}")
     print(f"Buy-Unconditional tTest: {Buy_Unconditional_tTest}")
     print(f"Sell-Unconditional tTest: {Sell_Unconditional_tTest}")
     print(f"Buy-Sell tTest: {Buy_Sell_tTest}")
-    print(f"Number of buys: {len(BuyReturn)}")
-    print(f"Number of sells: {len(SellReturn)}")
-    print(f"Number of unconditional data: {len(UnconditionalReturn)}")
+    print("Description on buys")
+    print(BuyReturn.describe())
+    print("Description on sells")
+    print(SellReturn.describe())
 
     return BuyReturn, SellReturn
 
@@ -291,10 +311,10 @@ def mean(l: list):
 def ProfitTest():
     # Initialize variable
     dataPath: dict[str, str] = {
-        "q-learning": os.path.join(TESTDIR, "q-learning"),
-        "MAAgent": os.path.join(TESTDIR, "MAAgent"),
-        "RSAgent": os.path.join(TESTDIR, "RSAgent"),
-        "RSIAgent": os.path.join(TESTDIR, "RSIAgent"),
+        "q-learning": os.path.join(TESTDIR, "q-learning", "test"),
+        "MAAgent": os.path.join(TESTDIR, "MAAgent", "test"),
+        "RSAgent": os.path.join(TESTDIR, "RSAgent", "test"),
+        "RSIAgent": os.path.join(TESTDIR, "RSIAgent", "test"),
     }
 
     Profit: dict[str, list[float]] = {
@@ -376,9 +396,11 @@ def ProfitTest():
 
 if __name__ == "__main__":
     # RunTest()
+    # RunSummary()
     # ReRunTest()
     # VisualizeSignal(os.path.join("tests", "q-learning", "MAAgent", "train"), PlotMode.MA)
     # VisualizeSignal(os.path.join("tests", "q-learning", "RSAgent", "train"), PlotMode.RS)
+    # VisualizeSignal(os.path.join("tests", "q-learning1", "RSAgent", "train"), PlotMode.RS)
     # VisualizeSignal(os.path.join("tests", "q-learning", "RSIAgent", "train"), PlotMode.RSI)
     RunBrockTest()
     # ProfitTest()

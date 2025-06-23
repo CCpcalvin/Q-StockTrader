@@ -5,19 +5,12 @@ import math, random, copy, csv, os
 
 
 class QLearningAgent(AbstractAgent):
-    # Generate all possible states here
-    # Note that
-    # - s_MA = 1, 2, 3, 4
-    # - s_RS = 1, 2, 3
-    # - s_RSI = 1, 2, 3, 4
-    # - s_I = 1, 2
+    # Generate all possible states that are found in the data
     def GenerateAllPossibleState(self):
         AllPossibleStates: list[State] = []
-        for s_MA in range(1, 5):
-            for s_RS in range(1, 4):
-                for s_RSI in range(1, 5):
-                    for s_I in [True, False]:
-                        AllPossibleStates.append(State(s_MA, s_RS, s_RSI, s_I))
+        for s_MA, s_RS, s_RSI in self.env.AllState:
+            for s_I in [True, False]:
+                AllPossibleStates.append(State(s_MA, s_RS, s_RSI, s_I))
 
         return AllPossibleStates
 
@@ -171,7 +164,7 @@ class QLearningAgent(AbstractAgent):
         return Error / Count
 
     # Define what a Training loop is
-    def TrainLoop(self, gamma: float = 1.0):
+    def TrainLoop(self, gamma: float = 0.9):
         # Choose an action
         ChosenAction = self.BoltzmannPolicy()
 
@@ -197,7 +190,6 @@ class QLearningAgent(AbstractAgent):
 
         # Now return the tolerance
         return self.CalculateError()
-        # return abs(self.QTable[self.LastState][ChosenAction] - self.LastQTable[self.LastState][ChosenAction])
 
     # Now define the whole training process
     def Train(self, tol: float = 5e-4):
@@ -210,7 +202,7 @@ class QLearningAgent(AbstractAgent):
         while Error > tol:
             Error = self.TrainLoop()
             count += 1
-            if not count % 10:
+            if not count % 100:
                 print(f"Finish training at {count} trial. The error is {Error}.")
 
     def Policy(self, state: State) -> AgentAction:
@@ -348,6 +340,12 @@ def RunTest():
     TrainPolicyTest(Q)
 
 
+def GenerateAllPossibleStateTest():
+    testEnv = Environment(os.path.join("formatted_data", "q-learning2"))
+    Q = QLearningAgent(testEnv)
+    print(Q.GenerateAllPossibleState())
+
+
 def main():
     testEnv = Environment("formatted_data")
     Q = QLearningAgent(testEnv)
@@ -359,4 +357,5 @@ def main():
 if __name__ == "__main__":
     # main()
     # RunTest()
-    LoadTest(os.path.join("tests", "q-learning", "q-learning-compiled1.csv"))
+    # LoadTest(os.path.join("tests", "q-learning", "q-learning-compiled1.csv"))
+    GenerateAllPossibleStateTest()

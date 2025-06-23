@@ -31,11 +31,12 @@ class Environment:
         for s_MA in range(1, 5):
             for s_RS in range(1, 4):
                 for s_RSI in range(1, 5):
-                    self.State2Sample[(s_MA, s_RS, s_RSI)] = pd.read_csv(
-                        os.path.join(dataPath, "train", f"{s_MA}{s_RS}{s_RSI}.csv")
-                    )
+                    if os.path.exists(os.path.join(dataPath, "train", f"{s_MA}{s_RS}{s_RSI}.csv")):
+                        self.State2Sample[(s_MA, s_RS, s_RSI)] = pd.read_csv(
+                            os.path.join(dataPath, "train", f"{s_MA}{s_RS}{s_RSI}.csv")
+                        )
 
-                    self.AllState.append((s_MA, s_RS, s_RSI))
+                        self.AllState.append((s_MA, s_RS, s_RSI))
 
     # Read the corresponding csv, extract only the useful col, then return it
     def LoadData(self, key: str):
@@ -138,7 +139,8 @@ class Environment:
 
 
 def main():
-    testEnv = Environment(os.path.join("formatted_data", "q-learning"))
+    testEnv = Environment(os.path.join("formatted_data", "q-learning2"))
+    print(testEnv.AllState)
     print(testEnv.GetTrain("AAPL"))
     print(testEnv.GetTest("AAPL"))
 

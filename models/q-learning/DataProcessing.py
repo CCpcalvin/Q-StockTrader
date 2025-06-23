@@ -90,54 +90,16 @@ def getSMATest(df: pd.DataFrame):
     plt.show()
 
 
-# Get s_{RS}
-def getSRS(df: pd.DataFrame, order: int = 5):
-    # Found local extremum
-    maxIdx = sg.argrelmax(df["Adj Close"].values, order=order)[0]
-    minIdx = sg.argrelmin(df["Adj Close"].values, order=order)[0]
-
-    if len(maxIdx) == 0 or len(minIdx) == 0:
-        df[S_RS_COL] = np.nan
-        return df
-
-    # Generate index array based on the local extremum index array
-    DataNum = df["Adj Close"].size
-    # Get the resistance level index array
-    resistanceIdx = np.zeros(DataNum, dtype=int)
-    for idx in range(1, len(maxIdx)):
-        previousMaxIdx = maxIdx[idx - 1]
-        currentMaxIdx = maxIdx[idx]
-        resistanceIdx[previousMaxIdx + order : currentMaxIdx + order] = previousMaxIdx
-
-    # Fix the end index
-    resistanceIdx[maxIdx[-1] + order :] = maxIdx[-1]
-
-    # Get the support level index array
-    supportIdx = np.zeros(DataNum, dtype=int)
-    for idx in range(1, len(minIdx)):
-        previousMinIdx = minIdx[idx - 1]
-        currentMinIdx = minIdx[idx]
-        supportIdx[previousMinIdx + order : currentMinIdx + order] = previousMinIdx
-
-    # Fix the end index
-    supportIdx[minIdx[-1] + order :] = minIdx[-1]
-
-    # Extract the resistance and support level data based on the index array
-    df["Resistance"] = df.iloc[resistanceIdx]["Adj Close"].to_list()
-    df["Support"] = df.iloc[supportIdx]["Adj Close"].to_list()
-
-    # Fix the beginning of the data
-    # Since we do not know the resistance and support level at the beginning,
-    # Replace the data with NaN
-    df.iloc[: resistanceIdx[0] + order, df.columns.get_loc("Resistance")] = np.nan
-    df.iloc[: supportIdx[0] + order, df.columns.get_loc("Support")] = np.nan
+def getSRS(df: pd.DataFrame, period: int = 50):
+    df["Resistance"] = df["Adj Close"].shift(1).rolling(period).max()
+    df["Support"] = df["Adj Close"].shift(1).rolling(period).min()
 
     # Get s_{RS} state
     df[S_RS_COL] = np.where(
-        df["Adj Close"] > df["Resistance"],
+        df["Adj Close"] >= df["Resistance"],
         1,
         np.where(
-            df["Adj Close"] < df["Support"], 
+            df["Adj Close"] <= df["Support"], 
             2,
             np.where(
                 ~df["Resistance"].isna() & ~df["Support"].isna(), 3, np.nan
@@ -150,7 +112,7 @@ def getSRS(df: pd.DataFrame, order: int = 5):
 
 # getSRS Test
 def getSRSTest(df: pd.DataFrame):
-    df = getSRS(df, order=5)
+    df = getSRS(df)
     # Set figure size
     plt.figure(figsize=(12, 9))
 
@@ -311,13 +273,11 @@ def Format(train_test_split_ratio: float = 0.8):
     for s_MA in range(1, S_MA_NUM + 1):
         for s_RS in range(1, S_RS_NUM + 1):
             for s_RSI in range(1, S_RSI_NUM + 1):
-                if len(StateDir[(s_MA, s_RS, s_RSI)]) == 0:
-                    print((s_MA, s_RS, s_RSI))
-
-                pd.concat(StateDir[(s_MA, s_RS, s_RSI)]).to_csv(
-                    os.path.join(STAT_DATA_PATH, f"{s_MA}{s_RS}{s_RSI}.csv"),
-                    index=False,
-                )
+                if len(StateDir[(s_MA, s_RS, s_RSI)]) != 0:
+                    pd.concat(StateDir[(s_MA, s_RS, s_RSI)]).to_csv(
+                        os.path.join(STAT_DATA_PATH, f"{s_MA}{s_RS}{s_RSI}.csv"),
+                        index=False,
+                    )
 
 
 if __name__ == "__main__":
